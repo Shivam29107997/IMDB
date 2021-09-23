@@ -1,0 +1,71 @@
+import numpy as np
+import pandas as pd
+from matplotlib import pyplot
+
+
+Loading data set from keras
+
+
+from keras.datasets import imdb
+
+Vocabulary_size=5000
+#selecting   number of word from data set
+
+
+
+#data in train and test form
+(xtrain,ytrain), (xtest,ytest) =imdb.load_data(num_words=Vocabulary_size)
+
+print(xtest)
+
+#map word ids back to word
+word2id = imdb.get_word_index()
+id2words={i: word for word , i in word2id.items()}
+print('Reviews of movies in word ')
+print([id2words.get(i,'')for i in xtrain[4]])
+
+print ('max review lenght:{}'.format(len(max((xtrain+xtest),key=len))))
+
+from keras.preprocessing import sequence 
+
+Padding the data set 
+
+max_words=500
+xtrain=sequence.pad_sequences(xtrain,maxlen=max_words)
+xtest=sequence.pad_sequences(xtest,maxlen=max_words)
+
+
+SEQUENTIAL THE LAYER
+
+
+from keras import Sequential
+from keras.layers import Embedding,LSTM,Dropout
+
+embeding_size=32
+model=Sequential()
+
+model.add(Embedding(Vocabulary_size,embeding_size,input_length=max_words))
+
+from keras.layers import Dense
+
+model.add(LSTM(100))
+model.add(Dense(1,activation='sigmoid'))
+print(model.summary())
+
+TRAIN AND EVALUATE
+
+
+model.compile(loss='binary_crossentropy', optimizer='adam',metrics=['accuracy'])
+
+batch_size=64
+num_apochs= 3
+xvalid,yvalid=xtrain[:batch_size],ytrain[:batch_size]
+xtrain2,ytrain2=xtrain[batch_size:],ytrain[batch_size:]
+
+model.fit(xtrain2,ytrain2,validation_data=(xvalid,yvalid),batch_size=batch_size,epochs=num_apochs)
+
+MODEL ACCURACY
+
+
+scores= model.evaluate(xtest,ytest)
+print('Test Accuracy:',scores[1])
